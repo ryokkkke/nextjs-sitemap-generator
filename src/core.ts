@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { format } from 'date-fns'
 import path from 'path'
+import { execSync } from 'child_process'
 // eslint-disable-next-line no-unused-vars
 import Config, { SitemapStyleFile } from './InterfaceConfig'
 
@@ -222,10 +223,33 @@ class SiteMapper {
 
     const date = format(new Date(), 'yyyy-MM-dd')
 
+    const diffFileNames = execSync("git diff --name-only")
+      .toString()
+      .split(/\n/)
+      .map((filePath) => filePath.replace(/\.[^.]+?$/, ""))
+
     filteredURLs.forEach((url) => {
       let alternates = ''
       let priority = ''
       let changefreq = ''
+      const modifiedDate = (() => {
+        const filePath = `pages${url.outputPath}`
+      
+        if (diffFileNames.includes(filePath)) return date
+      
+        const result = ["mdx", "tsx"]
+          .map(
+            (extension) =>
+              execSync(
+                `git log -1 --format="%ad" --date=short -- ${filePath}.${extension}`
+              )
+                .toString()
+                .split(/\n/)[0]
+          )
+          .filter((date) => date.length !== 0)[0]
+      
+        return result
+      })()
 
       for (const langSite in this.alternatesUrls) {
         alternates += `<xhtml:link rel="alternate" hreflang="${langSite}" href="${this.alternatesUrls[langSite]}${url.outputPath}" />`
@@ -242,7 +266,7 @@ class SiteMapper {
                 ${alternates}
                 ${priority}
                 ${changefreq}
-                <lastmod>${date}</lastmod>
+                <lastmod>${modifiedDate}</lastmod>
                 </url>`
 
       fs.writeFileSync(path.resolve(this.targetDirectory, './', this.sitemapFilename), xmlObject, {

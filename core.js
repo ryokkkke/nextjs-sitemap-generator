@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const date_fns_1 = require("date-fns");
 const path_1 = __importDefault(require("path"));
+const child_process_1 = require("child_process");
 class SiteMapper {
     constructor({ alternateUrls, baseUrl, extraPaths, ignoreIndexFiles, ignoredPaths, pagesDirectory, targetDirectory, sitemapFilename, nextConfigPath, ignoredExtensions, pagesConfig, sitemapStylesheet }) {
         this.pagesConfig = pagesConfig || {};
@@ -156,10 +157,25 @@ class SiteMapper {
         const urls = await this.getSitemapURLs(dir);
         const filteredURLs = urls.filter(url => !this.isIgnoredPath(url.pagePath));
         const date = date_fns_1.format(new Date(), 'yyyy-MM-dd');
+        const diffFileNames = child_process_1.execSync("git diff --name-only")
+            .toString()
+            .split(/\n/)
+            .map((filePath) => filePath.replace(/\.[^.]+?$/, ""));
         filteredURLs.forEach((url) => {
             let alternates = '';
             let priority = '';
             let changefreq = '';
+            const modifiedDate = (() => {
+                const filePath = `pages${url.outputPath}`;
+                if (diffFileNames.includes(filePath))
+                    return date;
+                const result = ["mdx", "tsx"]
+                    .map((extension) => child_process_1.execSync(`git log -1 --format="%ad" --date=short -- ${filePath}.${extension}`)
+                    .toString()
+                    .split(/\n/)[0])
+                    .filter((date) => date.length !== 0)[0];
+                return result;
+            })();
             for (const langSite in this.alternatesUrls) {
                 alternates += `<xhtml:link rel="alternate" hreflang="${langSite}" href="${this.alternatesUrls[langSite]}${url.outputPath}" />`;
             }
@@ -173,7 +189,7 @@ class SiteMapper {
                 ${alternates}
                 ${priority}
                 ${changefreq}
-                <lastmod>${date}</lastmod>
+                <lastmod>${modifiedDate}</lastmod>
                 </url>`;
             fs_1.default.writeFileSync(path_1.default.resolve(this.targetDirectory, './', this.sitemapFilename), xmlObject, {
                 flag: 'as'

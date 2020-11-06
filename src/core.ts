@@ -1,7 +1,9 @@
 import fs from 'fs'
 import { format } from 'date-fns'
 import path from 'path'
-import { execSync } from 'child_process'
+import childProcess from 'child_process'
+const execSync = childProcess.execSync;
+
 // eslint-disable-next-line no-unused-vars
 import Config, { SitemapStyleFile } from './InterfaceConfig'
 

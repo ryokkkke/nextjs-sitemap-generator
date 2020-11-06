@@ -6,7 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const date_fns_1 = require("date-fns");
 const path_1 = __importDefault(require("path"));
-const child_process_1 = require("child_process");
+const child_process_1 = __importDefault(require("child_process"));
+const execSync = child_process_1.default.execSync;
 class SiteMapper {
     constructor({ alternateUrls, baseUrl, extraPaths, ignoreIndexFiles, ignoredPaths, pagesDirectory, targetDirectory, sitemapFilename, nextConfigPath, ignoredExtensions, pagesConfig, sitemapStylesheet }) {
         this.pagesConfig = pagesConfig || {};
@@ -157,7 +158,7 @@ class SiteMapper {
         const urls = await this.getSitemapURLs(dir);
         const filteredURLs = urls.filter(url => !this.isIgnoredPath(url.pagePath));
         const date = date_fns_1.format(new Date(), 'yyyy-MM-dd');
-        const diffFileNames = child_process_1.execSync("git diff --name-only")
+        const diffFileNames = execSync("git diff --name-only")
             .toString()
             .split(/\n/)
             .map((filePath) => filePath.replace(/\.[^.]+?$/, ""));
@@ -170,7 +171,7 @@ class SiteMapper {
                 if (diffFileNames.includes(filePath))
                     return date;
                 const result = ["mdx", "tsx"]
-                    .map((extension) => child_process_1.execSync(`git log -1 --format="%ad" --date=short -- ${filePath}.${extension}`)
+                    .map((extension) => execSync(`git log -1 --format="%ad" --date=short -- ${filePath}.${extension}`)
                     .toString()
                     .split(/\n/)[0])
                     .filter((date) => date.length !== 0)[0];

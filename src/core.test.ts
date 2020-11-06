@@ -1,5 +1,7 @@
 /* eslint-disable */
 
+jest.mock("child_process");
+
 import Core from "./core";
 import Config from "./InterfaceConfig";
 import path from "path";
@@ -13,7 +15,7 @@ const config: Config = {
     en: "https://example.en",
     es: "https://example.es",
     ja: "https://example.jp",
-    fr: "https://example.fr"
+    fr: "https://example.fr",
   },
   baseUrl: "https://example.com.ru",
   ignoredPaths: ["admin", /^\/like\//],
@@ -24,13 +26,13 @@ const config: Config = {
   sitemapStylesheet: [
     {
       type: "text/css",
-      styleFile: "/test/styles.css"
+      styleFile: "/test/styles.css",
     },
     {
       type: "text/xsl",
-      styleFile: "test/test/styles.xls"
-    }
-  ]
+      styleFile: "test/test/styles.xls",
+    },
+  ],
 };
 const coreMapper = new Core(config);
 
@@ -130,7 +132,7 @@ it("Should generate sitemap.xml", async () => {
 it("should add extraPaths to output", async () => {
   const core = new Core({
     ...config,
-    extraPaths: ["/extraPath"]
+    extraPaths: ["/extraPath"],
   });
 
   const urls = await core.getSitemapURLs(config.pagesDirectory);
@@ -139,7 +141,7 @@ it("should add extraPaths to output", async () => {
     pagePath: "/extraPath",
     outputPath: "/extraPath",
     priority: "",
-    changefreq: ""
+    changefreq: "",
   });
 });
 
@@ -326,9 +328,9 @@ describe("with nextConfig", () => {
     const core = getCoreWithNextConfig({
       async exportPathMap(defaultMap) {
         return {
-          "/exportPathMapURL": { page: "/" }
+          "/exportPathMapURL": { page: "/" },
         };
-      }
+      },
     });
 
     const urls = await core.getSitemapURLs(config.pagesDirectory);
@@ -338,20 +340,20 @@ describe("with nextConfig", () => {
         changefreq: "",
         outputPath: "/exportPathMapURL",
         pagePath: "/exportPathMapURL",
-        priority: ""
-      }
+        priority: "",
+      },
     ]);
   });
 
   it("should respect exportTrailingSlash from Next config", async () => {
     const core = getCoreWithNextConfig({
-      exportTrailingSlash: true
+      exportTrailingSlash: true,
     });
 
     const urls = await core.getSitemapURLs(config.pagesDirectory);
 
-    const outputPaths = urls.map(url => url.outputPath);
-    expect(outputPaths.every(outputPath => outputPath.endsWith("/")));
+    const outputPaths = urls.map((url) => url.outputPath);
+    expect(outputPaths.every((outputPath) => outputPath.endsWith("/")));
 
     expect(urls).toMatchInlineSnapshot(`
       Array [
@@ -459,10 +461,10 @@ describe("with nextConfig", () => {
     const core = getCoreWithNextConfig({
       async exportPathMap(defaultMap) {
         return {
-          "/admin/": { page: "/" } // should be filtered out by ignoredPaths
+          "/admin/": { page: "/" }, // should be filtered out by ignoredPaths
         };
       },
-      exportTrailingSlash: true
+      exportTrailingSlash: true,
     });
 
     core.preLaunch();
@@ -491,10 +493,10 @@ describe("with nextConfig", () => {
     const core = getCoreWithNextConfig({
       async exportPathMap(defaultMap) {
         return {
-          "/exportPathMapURL": { page: "/" }
+          "/exportPathMapURL": { page: "/" },
         };
       },
-      exportTrailingSlash: true
+      exportTrailingSlash: true,
     });
 
     core.preLaunch();
